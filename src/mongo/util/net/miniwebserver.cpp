@@ -174,6 +174,21 @@ namespace mongo {
         }
         ss << "Connection: close\r\n";
         ss << "Content-Length: " << responseMsg.size() << "\r\n";
+
+        // CORS Support
+        //
+        // @note Because the REST API currently only supports GET and POST,
+        //       we don't need to handle preflight (OPTIONS) requests.
+        //
+        // @see https://developer.mozilla.org/en-US/docs/HTTP/Access_control_CORS
+        string origin = getHeader( buf , "Origin" );
+        if ( origin.size() > 0 ) {
+            ss << "Access-Control-Allow-Origin: " << origin << "\r\n";
+            ss << "Access-Control-Allow-Methods: GET, POST\r\n";
+            ss << "Access-Control-Allow-Headers: Content-Type, Authorization, Content-Length, X-Requested-With\r\n";
+            ss << "Access-Control-Allow-Credentials: true\r\n";
+        }
+
         ss << "\r\n";
         ss << responseMsg;
         string response = ss.str();
