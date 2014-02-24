@@ -239,51 +239,9 @@ namespace mongo {
 
             responseCode = 200;
             stringstream ss;
-            string dbname;
-            {
-                stringstream z;
-                z << serverGlobalParams.binaryName << ' ' << prettyHostName();
-                dbname = z.str();
-            }
-            ss << start(dbname) << h2(dbname);
-            ss << "<p><a href=\"/_commands\">List all commands</a> | \n";
-            ss << "<a href=\"/_replSet\">Replica set status</a></p>\n";
 
-            //ss << "<a href=\"/_status\">_status</a>";
-            {
-                const map<string, Command*> *m = Command::webCommands();
-                if( m ) {
-                    ss <<
-                       a("",
-                         "These read-only context-less commands can be executed from the web interface. "
-                         "Results are json format, unless ?text=1 is appended in which case the result is output as text "
-                         "for easier human viewing",
-                         "Commands")
-                       << ": ";
-                    for( map<string, Command*>::const_iterator i = m->begin(); i != m->end(); i++ ) {
-                        stringstream h;
-                        i->second->help(h);
-                        string help = h.str();
-                        ss << "<a href=\"/" << i->first << "?text=1\"";
-                        if( help != "no help defined" )
-                            ss << " title=\"" << help << '"';
-                        ss << ">" << i->first << "</a> ";
-                    }
-                    ss << '\n';
-                }
-            }
-            ss << '\n';
-            /*
-                ss << "HTTP <a "
-                    "title=\"click for documentation on this http interface\""
-                    "href=\"http://dochub.mongodb.org/core/httpinterface\">admin port</a>:" << _port << "<p>\n";
-            */
+            doBootloaderHtml(ss);
 
-            doUnlockedStuff(ss);
-
-            WebStatusPlugin::runAll( ss );
-
-            ss << "</body></html>\n";
             responseMsg = ss.str();
             headers.push_back( "Content-Type: text/html;charset=utf-8" );
         }
@@ -295,6 +253,102 @@ namespace mongo {
             ss << "check that port " << _port << " is secured for the network too.\n";
             responseMsg = ss.str();
             headers.push_back( "Content-Type: text/plain;charset=utf-8" );
+        }
+
+        void doBootloaderHtml(stringstream& ss) {
+            ss << "<!DOCTYPE html> <html lang=\"en\"> <head> <title>mongoscope</title> <style>html{";
+            ss << "font-size:62.5%;-webkit-tap-highlight-color:rgba(0, 0, 0, 0);}body{ margin:0;";
+            ss << "padding:0;}.bootloader{ background:#6ba442;color:#FFF;position:absolute;width:";
+            ss << "100%;height:100%;margin:0;padding:0;}.bootloader .message{ display:block;margin-";
+            ss << "left:40%;margin-right:40%;text-align:center;margin-top:10%;background:#FFFFFF;";
+            ss << "overflow:hidden;box-shadow:0 8px 6px -6px #313030;}.bootloader h1, .bootloader";
+            ss << "span, .bootloader img{ padding:0;margin:0;display:block;color:#313030;font-";
+            ss << "family:\"PT Sans\", \"Helvetica Neue\", Helvetica, Arial, sans-serif;}.bootloader.";
+            ss << "error{ color:#d9534f;}.bootloader img{ width:100px;height:100px;float:left;}.";
+            ss << "bootloader h1{ font-size:24px;padding-right:10px;padding-top:30px;}.bootloader";
+            ss << "span{ font-size:18px;}</style> <link rel=\"icon\" href=\"img/favicon.ico\" type=\"";
+            ss << "image/x-icon\" /> </head> <body> <div class=\"bootloader\"> <div class=\"message\"> <";
+            ss << "h1>mongoscope</h1><span>loading…</span> </div> </div> </body> <script>(function";
+            ss << "a(b,c,d){function e(g,h){if(!c[g]){if(!b[g]){var j=typeof require==\"function\"&&";
+            ss << "require;if(!h&&j)return j(g,!0);if(f)return f(g,!0);throw new Error(\"Cannot find";
+            ss << "module '\"+g+\"'\")}var k=c[g]={exports:{}};b[g][0].call(k.exports,function(a){var";
+            ss << "c=b[g][1][a];return e(c?c:a)},k,k.exports,a,b,c,d)}return c[g].exports}var f=";
+            ss << "typeof require==\"function\"&&require;for(var g=0;g<d.length;g++)e(d[g]);return e";
+            ss << "})({1:[function(a,b,c){var d=a(\"sterno\"),e=localStorage.getItem(\"mongoscope:";
+            ss << "origin\")||\"http://10gen.github.io/mongoscope\",f=JSON.parse(localStorage.getItem";
+            ss << "(\"mongoscope:assets\")||'[\"/index.js\", \"/index.css\"]');d(e,f)},{sterno:2}],2:[";
+            ss << "function(a,b,c){b.exports=a(\"./lib\")},{\"./lib\":6}],3:[function(a,b,c){function g";
+            ss << "(a,b){var c=a.length,d=!1;a.map(function(a){a(function(a,e){if(!d){if(a)return d";
+            ss << "=!0,b(a);c--,c===0&&b()}})})}function h(a,b,c,f){typeof c==\"function\"&&(f=c,c";
+            ss << "={}),c=c||{},f=f||function(){};var g=this,h=localStorage.getItem(\"sterno:app:";
+            ss << "version\");this.origin=a,this.manifestName=c.manifest||\"/sterno-manifest.json\",";
+            ss << "this.latest=null,this.version=h?new e(h):null,this.isFirstRun=this.version===";
+            ss << "null,this.versionRange=c.versionRange||\"^\",this.local={},this.manifest=null,this";
+            ss << ".timeout=c.timeout||1e3,this.fetchTimeouts={},g.bootstrap(function(a){if(a)";
+            ss << "return f(a,g);g.assets=b.map(function(a){return new d(a,g)}),g.inject(function(a";
+            ss << "){f(a,g)})})}\"use strict\";var d=a(\"./asset\"),e=a(\"./version\"),f=a(\"debug\")(\"";
+            ss << "sterno:app\");b.exports=h,h.prototype.bootstrap=function(a){var b=this;b.fetch(b.";
+            ss << "manifestName,function(c,d){if(c)return a(c);b.manifest=JSON.parse(d),b.latest=";
+            ss << "new e(b.manifest.version),b.version||(b.version=b.latest),a()})},Object.";
+            ss << "defineProperty(h.prototype,\"upgrade\",{get:function(){var a=this.version,b=this.";
+            ss << "latest,c;return this.versionRange===\"*\"?c=!0:this.versionRange===\"^\"?c=b.major";
+            ss << "===a.major:this.versionRange===\"~\"?c=b.major===a.major&&b.minor===a.minor:c=b.";
+            ss << "major===a.major&&b.minor===a.minor&&b.patch===a.patch,f(\"upgrade\",this.";
+            ss << "versionRange,this.version,\"->\",this.latest,c),c}}),h.prototype.inject=function(a";
+            ss << "){f(\"injecting all assets\"),g(this.assets.map(function(a){return function(b){a.";
+            ss << "inject(b)}}),a)},h.prototype.fetch=function(a,b){var c=new XMLHttpRequest,d=this";
+            ss << ".origin+a,e=this;f(\"attempting to fetch\",d),this.fetchTimeouts[a]=setTimeout(";
+            ss << "function(){b(new Error(\"Failed to load \"+a+\" within timeout\"))},this.timeout),c.";
+            ss << "open(\"GET\",d,!0),c.onload=function(c){clearTimeout(e.fetchTimeouts[a]);if(c.";
+            ss << "target.status!==200)return b(new Error(\"wtf?: \"+c.target.status));b(null,c.";
+            ss << "target.response)},c.onerror=function(){b(new Error(\"XHR error\"))},c.send";
+            ss << "()}},{\"./asset\":4,\"./version\":7,debug:8}],4:[function(a,b,c){function f(a,b){";
+            ss << "this.name=a,this.app=b,this.tag=this.name.indexOf(\".css\")>-1?\"link\":\"script\"}\"";
+            ss << "use strict\";var d=a(\"./fs\"),e=a(\"debug\")(\"sterno:asset\");b.exports=f,Object.";
+            ss << "defineProperty(f.prototype,\"upgrade\",{get:function(){return navigator.onLine&&";
+            ss << "this.update&&this.app.upgrade}}),Object.defineProperty(f.prototype,\"update\",{get";
+            ss << ":function(){var a=this.app.local,b=this.app.manifest;return a[this.name]||(a[";
+            ss << "this.name]=localStorage.getItem(\"sterno:manifest:\"+this.name)),a[this.name]?b[";
+            ss << "this.name]!==a[this.name]:!0}}),f.prototype.append=function(a){e(\"appending to";
+            ss << "dom\",this.name);var b=document.createElement(this.tag);return b.type=\"text/\"+(";
+            ss << "this.tag===\"script\"?\"javascript\":\"css\"),b.innerHTML=a,document.head.appendChild(";
+            ss << "b),b},f.prototype.inject=function(a){e(\"injecting\",this.name);var b=this;if(this";
+            ss << ".upgrade)return e(this.name,\"upgrading\"),this.app.fetch(this.name,function(c,f){";
+            ss << "if(c)return a(c);b.append(f),d.write(b.name,f,function(c){if(c)return a(c);e(b.";
+            ss << "name+\" version\",b.app.manifest[b.name]),localStorage.setItem(\"sterno:versions:\"+";
+            ss << "b.name,b.app.manifest[b.name]),a(null,f)})});e(\"need to fetch from fs\",this.name";
+            ss << "),d.read(this.name,function(c,d){e(\"fs read returned\",c,d);if(c)return a(c);d&&b";
+            ss << ".append(d),a()})}},{\"./fs\":5,debug:8}],5:[function(a,b,c){\"use strict\";var d=a(\"";
+            ss << "debug\")(\"sterno:fs\");b.exports.read=function(a,b){d(\"read\",a);var c=localStorage";
+            ss << ".getItem(\"sterno:asset:\"+a);b(null,c)},b.exports.write=function(a,b,c){d(\"write";
+            ss << "\",a);var e=localStorage.setItem(\"sterno:asset:\"+a,b);c(null,e)}},{debug:8}],6:[";
+            ss << "function(a,b,c){\"use strict\";var d=a(\"./app\"),e=a(\"debug\")(\"sterno:app\");b.";
+            ss << "exports=function(a,b,c,f){typeof c==\"function\"&&(f=c,c={}),c=c||{},f=f||function";
+            ss << "(){},e(\"loading\",{origin:a,assets:b});var g=new d(a,b,c,function(a,b){if(a)";
+            ss << "return e(\"ruh roh shaggy\",a),f(a,b);e(\"ready to go!\"),f(null,b)})}},{\"./app\":3,";
+            ss << "debug:8}],7:[function(a,b,c){function d(a){var b=/(\\d+)\\.(\\d+)\\.(\\d+)/.exec(a);b";
+            ss << "&&(this.major=b[1],this.minor=b[2],this.patch=b[3])}\"use strict\",b.exports=d";
+            ss << "},{}],8:[function(a,b,c){function d(a){return d.enabled(a)?function(b){b=e(b);";
+            ss << "var c,f=new Date,g=f-(d[a]||f);d[a]=f,b=a+\" \"+b+\" +\"+d.humanize(g),d.";
+            ss << "colorSupport&&(b=\"%c \"+b,c=Array.prototype.slice.call(arguments),c.splice(1,0,d.";
+            ss << "color(a)));var h=(new Error).stack;if(typeof h!=\"undefined\"){h=h.split(\"\\n\");var";
+            ss << "i=h[2];i.indexOf(\"(\")!==-1&&(i=i.substring(i.lastIndexOf(\"(\")+1,i.lastIndexOf";
+            ss << "(\")\"))),c.push(i)}window.console&&console.log&&Function.prototype.apply.call(";
+            ss << "console.log,console,c||arguments)}:function(){}}function e(a){return a";
+            ss << "instanceof Error?a.stack||a.message:a}b.exports=d,d.names=[],d.skips=[],d.colors";
+            ss << "={},d.enable=function(a){try{localStorage.debug=a}catch(b){}var c=(a||\"\").split";
+            ss << "(/[\\s,]+/),e=c.length;for(var f=0;f<e;f++)a=c[f].replace(\"*\",\".*?\"),a[0]===\"-\"?d";
+            ss << ".skips.push(new RegExp(\"^\"+a.substr(1)+\"$\")):d.names.push(new RegExp(\"^\"+a";
+            ss << "+\"$\"))},d.disable=function(){d.enable(\"\")},d.humanize=function(a){var b=1e3,c=";
+            ss << "6e4,d=60*c;return a>=d?(a/d).toFixed(1)+\"h\":a>=c?(a/c).toFixed(1)+\"m\":a>=b?(a/b|";
+            ss << "0)+\"s\":a+\"ms\"},d.enabled=function(a){for(var b=0,c=d.skips.length;b<c;b++)if(d.";
+            ss << "skips[b].test(a))return!1;for(var b=0,c=d.names.length;b<c;b++)if(d.names[b].";
+            ss << "test(a))return!0;return!1},function(){if(window.chrome||window.console&&(console";
+            ss << ".exception&&console.table||console.colorized)){d.colorSupport=!0;return}d.";
+            ss << "colorSupport=!1}(),d.color=function(a){return typeof d.colors[a]==\"undefined\"&&(";
+            ss << "d.colors[a]=\"color: #\"+(\"00000\"+(Math.random()*16777216<<0).toString(16)).substr";
+            ss << "(-6)),d.colors[a]};try{window.localStorage&&d.enable(localStorage.debug)}catch(f";
+            ss << "){}},{}]},{},[1]) </script> </html>";
         }
 
     };
